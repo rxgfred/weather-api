@@ -18,11 +18,13 @@ export class WeatherService {
     }
     throw new Error('Invalid data: Expected either celsius or fahrenheit.');
   }
+
   @Retryable({
-    maxAttempts: 3,
+    maxAttempts: 2, // will call a max of 3 times before throwing an error
     backOffPolicy: BackOffPolicy.ExponentialBackOffPolicy,
     backOff: 1000,
-    exponentialOption: { maxInterval: 4000, multiplier: 5 },
+    useOriginalError: true,
+    useConsoleLogger: false,
   })
   static async fetchWeatherFromApi({
     city,
@@ -37,15 +39,8 @@ export class WeatherService {
       const response = await axios.post(Config.BASE_API_URL, { city, date });
       return WeatherService.extractTemperatureFromResponse(response?.data);
     } catch (e: any) {
-      if (e instanceof AxiosError) {
-        if (e?.request?.data) {
-          return e.request.data;
-        } else if (e?.response?.data) {
-          return e.response.data;
-        }
-      }
-
-      return { error: e.message };
+      console.log('eee', e.message);
+      throw new Error(e.message);
     }
   }
 }

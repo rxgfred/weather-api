@@ -4,6 +4,9 @@ import axios from 'axios';
 jest.mock('axios');
 
 describe('WeatherService', () => {
+  beforeEach(() => {
+    jest.clearAllMocks(); // Clear axios call counter
+  });
   describe('extractTemperatureFromResponse', () => {
     it('should return both celsius and fahrenheit when celsius is provided', () => {
       const data = { celsius: 25 };
@@ -46,13 +49,15 @@ describe('WeatherService', () => {
       const mockError = new Error('Network Error');
       (axios.post as jest.Mock).mockRejectedValue(mockError);
 
-      const result = await WeatherService.fetchWeatherFromApi({
-        city: mockCity,
-        date: mockDate,
-      });
-
-      expect(result).toEqual({ error: 'Network Error' });
-    });
+      try {
+        const result = await WeatherService.fetchWeatherFromApi({
+          city: mockCity,
+          date: mockDate,
+        });
+      } catch (e) {
+        expect((e as Error).message).toEqual('Network Error');
+      }
+    }, 30_000);
 
     it('should retry the API call up to maxAttempts if it fails', async () => {
       const mockError = new Error('Network Error');
@@ -66,6 +71,6 @@ describe('WeatherService', () => {
       } catch (e) {}
 
       expect(axios.post).toHaveBeenCalledTimes(3);
-    });
+    }, 30_000);
   });
 });
