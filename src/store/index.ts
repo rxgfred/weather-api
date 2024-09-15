@@ -90,14 +90,15 @@ export class SqliteStoreImpl implements IStore {
     const setItemStmt = this.db.prepare(
       `INSERT OR
        REPLACE
-       INTO cache (key, value, expiresAt)
-       VALUES (@key, @value, @expiresAt)`
+       INTO cache (key, value, expiresAt, lastAccessedAt)
+       VALUES (@key, @value, @expiresAt, @lastAccessedAt)`
     );
 
     setItemStmt.run({
       key,
       value: cbor.encode(value),
       expiresAt: expiresAt.getTime(),
+      lastAccessedAt: Date.now(),
     });
   }
 

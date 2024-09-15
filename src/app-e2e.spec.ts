@@ -4,6 +4,8 @@ import { apiRoutes } from './routes';
 import axios from 'axios';
 import httpStatusCodes from 'http-status-codes';
 
+axios.post = jest.fn();
+
 const mockStore = {
   getItemFromCache: jest.fn(),
   addItemToCache: jest.fn(),
@@ -59,7 +61,7 @@ describe('POST /api/v1/weather', () => {
     const apiResponseData = { celsius: 25, fahrenheit: 77 };
 
     mockStore.getItemFromCache.mockResolvedValueOnce(null); // No cached data
-    jest.spyOn(axios, 'post').mockResolvedValueOnce({ data: apiResponseData }); // Mock API response
+    (axios.post as jest.Mock).mockResolvedValueOnce({ data: apiResponseData }); // Mock API response
 
     const response = await request(app)
       .post(endpoint)
@@ -75,19 +77,23 @@ describe('POST /api/v1/weather', () => {
   });
 
   it('should handle external API errors gracefully, retrying after the first run', async () => {
-    const apiErrorResponse = { message: 'API Error' };
+    const apiErrorResponse = { error: 'API Error' };
+    const retrySuccessResponse = { celsius: 100, fahrenheit: 212 };
 
     mockStore.getItemFromCache.mockResolvedValueOnce(null); // Cache miss
-    jest
-      .spyOn(axios, 'post')
-      .mockRejectedValueOnce({ response: { data: apiErrorResponse } })
-      .mockResolvedValueOnce({ response: { data: { celsius: 100 } } }); // Mock API error
+    (axios.post as jest.Mock)
+      .mockRejectedValueOnce({ response: { data: apiErrorResponse } }) // First attempt fails
+      .mockResolvedValueOnce({ data: retrySuccessResponse }); // Second attempt succeeds
 
     const response = await request(app)
       .post(endpoint)
       .send({ city: 'San Francisco', date: '2022-01-01T00:00:00Z' });
 
     expect(response.status).toBe(httpStatusCodes.OK);
-    expect(response.body).not.toEqual({});
+    expect(response.body).toEqual(retrySuccessResponse); // Ensure successful retry data is returned
+    expect(mockStore.addItemToCache).toHaveBeenCalledWith(
+      'San Francisco:1640995200000',
+      retrySuccessResponse
+    ); // Data should be cached after a successful retry
   });
 });

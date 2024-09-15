@@ -27,6 +27,7 @@ describe('SqliteStoreImpl', () => {
         key,
         value: cbor.encode(value),
         expiresAt: expect.any(Number),
+        lastAccessedAt: expect.any(Number),
       });
     });
 
@@ -49,6 +50,7 @@ describe('SqliteStoreImpl', () => {
         key,
         value: cbor.encode(value),
         expiresAt: expect.any(Number),
+        lastAccessedAt: expect.any(Number),
       });
     });
   });
