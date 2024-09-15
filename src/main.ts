@@ -4,9 +4,11 @@ import morgan from 'morgan';
 import requestIp from 'request-ip';
 import { rateLimiting } from './middleware/rate-limit.mw';
 import { apiRoutes } from './routes';
+import { createStore } from './store';
 
 const PORT = 3000;
 void (async function () {
+  const store = await createStore();
   const app = express();
   const httpServer = createServer(app);
 
@@ -15,7 +17,7 @@ void (async function () {
   );
   app.use(requestIp.mw());
   app.use(rateLimiting());
-  app.use('/api/v1', apiRoutes());
+  app.use('/api/v1', apiRoutes(store));
   httpServer.on('listening', () =>
     console.log('🚀 Server ready at on port', `${PORT}`)
   );

@@ -1,9 +1,12 @@
 import { Request, Response } from 'express';
 import httpStatusCodes from 'http-status-codes';
 import { isFuture, isValid, parseISO } from 'date-fns';
+import { IStore } from '../store';
 
 export const WeatherController = {
-  getWeather: (): ((req: Request, res: Response) => Promise<any>) => {
+  getWeather: (
+    store: IStore
+  ): ((req: Request, res: Response) => Promise<any>) => {
     return async function (req, res) {
       const { city, date } = req.body;
       if (!city) {
