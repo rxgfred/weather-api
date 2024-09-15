@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import httpStatusCodes from 'http-status-codes';
 import { isFuture, isValid, parseISO } from 'date-fns';
 import { IStore } from '../store';
+import { WeatherService } from '../services/weather-service';
 
 export const WeatherController = {
   getWeather: (
@@ -35,8 +36,18 @@ export const WeatherController = {
         return res.status(httpStatusCodes.OK).json(cachedResult);
       }
 
-      // fake response
-      return res.status(200).json({ celsius: 100, fahrenheit: 212 });
+      try {
+        const response = await WeatherService.fetchWeatherFromApi({
+          city,
+          date,
+        });
+        await store.addItemToCache(cacheKey, response);
+        return res.status(httpStatusCodes.OK).json(response);
+      } catch (e: any) {
+        return res
+          .status(httpStatusCodes.INTERNAL_SERVER_ERROR)
+          .json({ error: e.message });
+      }
     };
   },
 };
