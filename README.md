@@ -37,6 +37,9 @@ curl --request POST \
 ## Features and design decisions
 - Sane defaults have been provided for the configuration except for BASE_API_URL, which must be specified. See [config/index.ts](./src/config/index.ts).
 - I do not perform any validation of the 'correctness' of the city (whether it is a real city or not).
+- I chose POST over GET for the endpoint because:
+  - the city name could be unreasonably long, exceeding the GET URL query string limitation. 
+  - there's a potential side effect (due to our SQLite cache), and we want to avoid caching by the browser.
 - I combined the use of TTL (time-to-live) to ensure the freshness of data and LRU to manage space effectively in the cache implementation.
 - I did not make the `retryCount` for calling the external API configurable. (partly to make the tests run as quickly as possible).
 - Made use of an exponential backoff policy for calling the external API.
