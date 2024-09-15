@@ -14,18 +14,21 @@ export interface IStore {
   removeItemFromCache(key: string): Promise<void>;
 }
 
-// cache implementation that uses TTL
+// cache implementation that combines both TTL and LRU
+// TTL and LRU cache size can be specified as opts passed to the constructor
 export class SqliteStoreImpl implements IStore {
   private readonly interval: NodeJS.Timeout;
 
   constructor(
     readonly db: Database,
     // TTL: Defaults to 5 minutes
-    private readonly ttl: number = Config.CACHE_TTL
+    private readonly ttl: number = Config.CACHE_TTL,
+    // Maximum size for LRU eviction
+    private readonly lruSize: number = Config.LRU_SIZE
   ) {
     this.db = db;
     this.ttl = ttl;
-    // clear cache every 10 minutes
+    // clear cache every EVICTION_FREQUENCY milliseconds.
     this.interval = setInterval(
       () => this.evictExpiredItems(db),
       Config.EVICTION_FREQUENCY
@@ -39,6 +42,13 @@ export class SqliteStoreImpl implements IStore {
          FROM cache
          WHERE expiresAt < @now`
       ).run({ now: Date.now() });
+      if (this.lruSize > 0) {
+        db.prepare(
+          `WITH lru AS (SELECT key FROM cache ORDER BY lastAccessedAt DESC LIMIT -1 OFFSET @lruSize)
+      DELETE FROM cache WHERE key IN lru
+      `
+        ).run({ lruSize: this.lruSize });
+      }
     } catch (e) {
       console.log(
         `An error occurred while evicting expired items from cache.`,
@@ -49,10 +59,11 @@ export class SqliteStoreImpl implements IStore {
 
   async getItemFromCache(key: string): Promise<any> {
     const getItemStmt = this.db.prepare<{ key: string; now: number }, any>(
-      `SELECT value
-       from cache
+      `UPDATE OR IGNORE cache
+       SET lastAccessedAt = @now
        WHERE key = @key
-         AND (expiresAt > @now OR expiresAt IS NULL)`
+         AND (expiresAt > @now OR expiresAt IS NULL)
+       RETURNING value`
     );
 
     const res = getItemStmt.get({
@@ -110,7 +121,7 @@ export class SqliteStoreImpl implements IStore {
 let _store: IStore | undefined;
 export const createStore = async (): Promise<IStore> => {
   if (!_store) {
-    const db = new BetterSqlite3('test.sqlite');
+    const db = new BetterSqlite3(Config.DATABASE_URL);
 
     db.transaction(() => {
       const createTableStmt = `
@@ -118,7 +129,8 @@ export const createStore = async (): Promise<IStore> => {
           (
               key            TEXT PRIMARY KEY,
               value          BLOB,
-              expiresAt      INT
+              expiresAt      INT,
+              lastAccessedAt INT
           )
       `;
 
@@ -126,6 +138,9 @@ export const createStore = async (): Promise<IStore> => {
 
       db.prepare(
         `CREATE INDEX IF NOT EXISTS expires ON cache (expiresAt)`
+      ).run();
+      db.prepare(
+        `CREATE INDEX IF NOT EXISTS lastAccess ON cache (lastAccessedAt)`
       ).run();
     })();
 

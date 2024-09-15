@@ -148,5 +148,47 @@ describe('SqliteStoreImpl', () => {
       );
       consoleSpy.mockRestore();
     });
+
+    describe('LRU', () => {
+      it('should not evict LRU items if lruSize is 0', async () => {
+        const store = new SqliteStoreImpl(db as Database, 6000, 0);
+
+        const mockRun = jest.fn();
+        db.prepare = jest.fn().mockReturnValue({ run: mockRun });
+
+        try {
+          await store.evictExpiredItems(db);
+        } finally {
+          await store.close();
+        }
+
+        expect(mockRun).toHaveBeenCalledTimes(1); // Only expired items eviction, no LRU eviction
+        expect(db.prepare).toHaveBeenCalledTimes(1);
+      });
+
+      it('should evict items based on LRU policy if lruSize is greater than 0', async () => {
+        const store = new SqliteStoreImpl(db as Database, 6000, 10); // LRU eviction should occur
+
+        const mockRun = jest.fn();
+        db.prepare = jest.fn().mockReturnValue({ run: mockRun });
+
+        try {
+          await store.evictExpiredItems(db);
+        } finally {
+          await store.close();
+        }
+
+        expect(mockRun).toHaveBeenCalledTimes(2); // One for expired items and one for LRU eviction
+        expect(db.prepare).toHaveBeenNthCalledWith(
+          2,
+          `WITH lru AS (SELECT key FROM cache ORDER BY lastAccessedAt DESC LIMIT -1 OFFSET @lruSize)
+      DELETE FROM cache WHERE key IN lru
+      `
+        );
+        expect(mockRun).toHaveBeenCalledWith({
+          lruSize: 10,
+        });
+      });
+    });
   });
 });

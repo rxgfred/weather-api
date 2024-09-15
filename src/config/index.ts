@@ -17,4 +17,6 @@ export const Config = {
   CACHE_TTL: parseInt(CACHE_TTL ?? '300000'),
   // clear cache every EVICTION_FREQUENCY milliseconds.
   EVICTION_FREQUENCY: parseInt(EVICTION_FREQUENCY ?? '600000'),
+  //Maximum LRU Size: Defaults to 10,000
+  LRU_SIZE: parseInt(LRU_SIZE ?? '10000'),
 };
