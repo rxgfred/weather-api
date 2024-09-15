@@ -1,3 +1,4 @@
+import { BackOffPolicy, Retryable } from 'typescript-retry-decorator';
 import { Config } from '../config';
 import axios, { AxiosError } from 'axios';
 
@@ -17,7 +18,12 @@ export class WeatherService {
     }
     throw new Error('Invalid data: Expected either celsius or fahrenheit.');
   }
-
+  @Retryable({
+    maxAttempts: 3,
+    backOffPolicy: BackOffPolicy.ExponentialBackOffPolicy,
+    backOff: 1000,
+    exponentialOption: { maxInterval: 4000, multiplier: 5 },
+  })
   static async fetchWeatherFromApi({
     city,
     date,

@@ -53,5 +53,19 @@ describe('WeatherService', () => {
 
       expect(result).toEqual({ error: 'Network Error' });
     });
+
+    it('should retry the API call up to maxAttempts if it fails', async () => {
+      const mockError = new Error('Network Error');
+      (axios.post as jest.Mock).mockRejectedValue(mockError);
+
+      try {
+        await WeatherService.fetchWeatherFromApi({
+          city: mockCity,
+          date: mockDate,
+        });
+      } catch (e) {}
+
+      expect(axios.post).toHaveBeenCalledTimes(3);
+    });
   });
 });
