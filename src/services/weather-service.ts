@@ -32,9 +32,7 @@ export class WeatherService {
   }: {
     city: string;
     date: string;
-  }): Promise<
-    { celsius: number } | { fahrenheit: number } | { error: string }
-  > {
+  }): Promise<{ celsius: number; fahrenheit: number }> {
     try {
       const response = await axios.post(Config.BASE_API_URL, { city, date });
       return WeatherService.extractTemperatureFromResponse(response?.data);

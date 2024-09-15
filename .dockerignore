@@ -4,3 +4,7 @@ npm-debug.log
 *.sqlite
 .env
 .DS_Store
+
+# sqlite WAL files
+*.sqlite-shm
+*.sqlite-wal

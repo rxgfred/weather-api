@@ -123,3 +123,7 @@ dist
 
 # sqlite
 *.sqlite
+
+# sqlite WAL files
+*.sqlite-shm
+*.sqlite-wal
