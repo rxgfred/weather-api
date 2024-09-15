@@ -124,6 +124,9 @@ export const createStore = async (): Promise<IStore> => {
   if (!_store) {
     const db = new BetterSqlite3(Config.DATABASE_URL);
 
+    // https://github.com/WiseLibs/better-sqlite3/blob/master/docs/performance.md
+    db.pragma('journal_mode = WAL');
+
     db.transaction(() => {
       const createTableStmt = `
           CREATE TABLE IF NOT EXISTS cache
