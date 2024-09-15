@@ -25,7 +25,7 @@ Call using cURL:
 
 ```
 curl --request POST \
---url https:localhost:8080/api/v1/weather \
+--url http://localhost:8080/api/v1/weather \
 --header 'Content-Type: application/json' \
 --data '{
 "city": "New York",
