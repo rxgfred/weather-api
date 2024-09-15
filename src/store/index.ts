@@ -137,10 +137,10 @@ export const createStore = async (): Promise<IStore> => {
       db.prepare(createTableStmt).run();
 
       db.prepare(
-        `CREATE INDEX IF NOT EXISTS expires ON cache (expiresAt)`
+        `CREATE INDEX IF NOT EXISTS expiresAt ON cache (expiresAt)`
       ).run();
       db.prepare(
-        `CREATE INDEX IF NOT EXISTS lastAccess ON cache (lastAccessedAt)`
+        `CREATE INDEX IF NOT EXISTS lastAccessedAt ON cache (lastAccessedAt)`
       ).run();
     })();
 

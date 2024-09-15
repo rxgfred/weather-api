@@ -1,11 +1,12 @@
-import express from 'express';
+import express, { ErrorRequestHandler } from 'express';
 import { createServer } from 'http';
 import morgan from 'morgan';
 import requestIp from 'request-ip';
 import { rateLimiting } from './middleware/rate-limit.mw';
 import { apiRoutes } from './routes';
-import { createStore } from './store';
+import { createStore, SqliteStoreImpl } from './store';
 import { Config } from './config';
+import httpStatusCodes from 'http-status-codes';
 
 void (async function () {
   const store = await createStore();
@@ -18,6 +19,13 @@ void (async function () {
   app.use(requestIp.mw());
   app.use(rateLimiting());
   app.use('/api/v1', apiRoutes(store));
+
+  app.use(function (err, _req, res, _next) {
+    return res
+      .status(httpStatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: err.message });
+  } as ErrorRequestHandler);
+
   httpServer.on('listening', () =>
     console.log('🚀 Server ready at on port', `${Config.PORT}`)
   );
@@ -27,4 +35,12 @@ void (async function () {
   );
 
   httpServer.listen(Config.PORT, '0.0.0.0');
+
+  process.on('SIGINT', () => {
+    // cleanup
+    httpServer.close(function () {
+      (store as SqliteStoreImpl).close();
+      process.exit(0);
+    });
+  });
 })();
