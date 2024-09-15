@@ -1,5 +1,6 @@
 import BetterSqlite3, { Database } from 'better-sqlite3';
 import cbor from 'cbor';
+import { Config } from '../config';
 
 export interface IStore {
   getItemFromCache(key: string): Promise<string>;
@@ -20,12 +21,15 @@ export class SqliteStoreImpl implements IStore {
   constructor(
     readonly db: Database,
     // TTL: Defaults to 5 minutes
-    private readonly ttl: number = 300_000
+    private readonly ttl: number = Config.CACHE_TTL
   ) {
     this.db = db;
     this.ttl = ttl;
     // clear cache every 10 minutes
-    this.interval = setInterval(() => this.evictExpiredItems(db), 600_000);
+    this.interval = setInterval(
+      () => this.evictExpiredItems(db),
+      Config.EVICTION_FREQUENCY
+    );
   }
 
   async evictExpiredItems(db: Database): Promise<void> {

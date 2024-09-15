@@ -5,8 +5,8 @@ import requestIp from 'request-ip';
 import { rateLimiting } from './middleware/rate-limit.mw';
 import { apiRoutes } from './routes';
 import { createStore } from './store';
+import { Config } from './config';
 
-const PORT = 3000;
 void (async function () {
   const store = await createStore();
   const app = express();
@@ -19,12 +19,12 @@ void (async function () {
   app.use(rateLimiting());
   app.use('/api/v1', apiRoutes(store));
   httpServer.on('listening', () =>
-    console.log('🚀 Server ready at on port', `${PORT}`)
+    console.log('🚀 Server ready at on port', `${Config.PORT}`)
   );
 
   httpServer.on('error', (error: Error) =>
     console.log(`An error occurred on the server: ${error}`)
   );
 
-  httpServer.listen(PORT, '0.0.0.0');
+  httpServer.listen(Config.PORT, '0.0.0.0');
 })();
