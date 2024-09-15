@@ -28,6 +28,13 @@ export const WeatherController = {
           .json({ error: 'Date cannot be in the future.' });
       }
 
+      const cacheKey = `${city}:${parsedDate.getTime()}`;
+
+      const cachedResult = await store.getItemFromCache(cacheKey);
+      if (cachedResult) {
+        return res.status(httpStatusCodes.OK).json(cachedResult);
+      }
+
       // fake response
       return res.status(200).json({ celsius: 100, fahrenheit: 212 });
     };

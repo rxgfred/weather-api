@@ -9,6 +9,12 @@ jest.mock('date-fns', () => ({
   parseISO: jest.fn(),
 }));
 
+const mockStore = {
+  getItemFromCache: jest.fn(),
+  addItemToCache: jest.fn(),
+  removeItemFromCache: jest.fn(),
+};
+
 describe('WeatherController', () => {
   let req: Request;
   let res: Response;
@@ -26,7 +32,7 @@ describe('WeatherController', () => {
   });
 
   it('should return 400 if the city is invalid', async () => {
-    await WeatherController.getWeather()(
+    await WeatherController.getWeather(mockStore)(
       { ...req, body: { ...req.body, city: '' } } as Request,
       res
     );
@@ -39,7 +45,7 @@ describe('WeatherController', () => {
     (parseISO as jest.Mock).mockReturnValue(new Date('invalid-date'));
     (isValid as jest.Mock).mockReturnValue(false);
 
-    await WeatherController.getWeather()(req, res);
+    await WeatherController.getWeather(mockStore)(req, res);
 
     expect(res.status).toHaveBeenCalledWith(httpStatusCodes.BAD_REQUEST);
     expect(res.json).toHaveBeenCalledWith({ error: 'Invalid date' });
@@ -51,11 +57,26 @@ describe('WeatherController', () => {
     (isValid as jest.Mock).mockReturnValue(true);
     (isFuture as jest.Mock).mockReturnValue(true);
 
-    await WeatherController.getWeather()(req, res);
+    await WeatherController.getWeather(mockStore)(req, res);
 
     expect(res.status).toHaveBeenCalledWith(httpStatusCodes.BAD_REQUEST);
     expect(res.json).toHaveBeenCalledWith({
       error: 'Date cannot be in the future.',
     });
+  });
+
+  it('should return cached result if available', async () => {
+    const mockDate = new Date('2023-09-12');
+    const mockCacheData = { celsius: 20, fahrenheit: 68 };
+
+    (parseISO as jest.Mock).mockReturnValue(mockDate);
+    (isValid as jest.Mock).mockReturnValue(true);
+    (isFuture as jest.Mock).mockReturnValue(false);
+    mockStore.getItemFromCache.mockResolvedValue(mockCacheData);
+
+    await WeatherController.getWeather(mockStore)(req, res);
+
+    const cacheKey = `${req.body.city}:${mockDate.getTime()}`;
+    expect(mockStore.getItemFromCache).toHaveBeenCalledWith(cacheKey);
   });
 });
