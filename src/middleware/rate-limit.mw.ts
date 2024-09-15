@@ -3,8 +3,8 @@ import { RequestHandler } from 'express';
 import httpStatusCodes from 'http-status-codes';
 
 const rateLimiter = new RateLimiterMemory({
-  points: 5000, // 5K requests
-  duration: 1, // per second
+  points: 10, // number of requests
+  duration: 10, // per second
 });
 
 export const rateLimiting = (): RequestHandler => {

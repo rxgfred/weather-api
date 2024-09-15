@@ -113,6 +113,7 @@ export class SqliteStoreImpl implements IStore {
   }
 
   async close() {
+    // clear timer for interval
     clearInterval(this.interval);
     this.db.close();
   }

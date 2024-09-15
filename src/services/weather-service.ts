@@ -1,6 +1,6 @@
 import { BackOffPolicy, Retryable } from 'typescript-retry-decorator';
 import { Config } from '../config';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 
 export class WeatherService {
   static extractTemperatureFromResponse(data: {
@@ -39,7 +39,6 @@ export class WeatherService {
       const response = await axios.post(Config.BASE_API_URL, { city, date });
       return WeatherService.extractTemperatureFromResponse(response?.data);
     } catch (e: any) {
-      console.log('eee', e.message);
       throw new Error(e.message);
     }
   }
