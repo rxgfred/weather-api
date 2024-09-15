@@ -41,4 +41,4 @@ curl --request POST \
 - I did not make the `retryCount` for calling the external API configurable. (partly to make the tests run as quickly as possible).
 - Made use of an exponential backoff policy for calling the external API.
 - Made use of an in-memory rate limiter. An external service like Redis would be better in a multi-instance setting.
-- given the simplicity of the cache schema, I do not run separate migrations for it or make provisions for long-term persistence for the data (we can drop and re-create the table as needed).
+- given the simplicity of the cache schema, I do not run separate migrations for it or make provisions for long-term persistence for the data (defaults to in-memory sqlite if not specified in environment variables, and we can drop and re-create the table as needed).
