@@ -14,7 +14,7 @@
 - Run `npm run start:dev` to start the server.
     ### Docker Setup
     - configure port, e.g.: `export PORT=8080`.
-    - Build image: `docker build -t --build-arg PORT weather-api .`
+    - Build image: `docker build --build-arg PORT -t weather-api .`
     - Start container, specifying the env file as shown: `docker run -p $PORT:$PORT --env-file <your env file here> weather-api`
 
 ## Tests
