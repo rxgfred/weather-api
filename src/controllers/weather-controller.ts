@@ -43,10 +43,10 @@ export const WeatherController = {
         });
         await store.addItemToCache(cacheKey, response);
         return res.status(httpStatusCodes.OK).json(response);
-      } catch (e: any) {
+      } catch (e) {
         return res
           .status(httpStatusCodes.INTERNAL_SERVER_ERROR)
-          .json({ error: e.message });
+          .json({ error: (<Error>e).message });
       }
     };
   },

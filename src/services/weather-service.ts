@@ -36,8 +36,8 @@ export class WeatherService {
     try {
       const response = await axios.post(Config.BASE_API_URL, { city, date });
       return WeatherService.extractTemperatureFromResponse(response?.data);
-    } catch (e: any) {
-      throw new Error(e.message);
+    } catch (e) {
+      throw new Error((<Error>e).message);
     }
   }
 }

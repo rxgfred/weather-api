@@ -75,9 +75,7 @@ export class SqliteStoreImpl implements IStore {
       return undefined;
     }
 
-    let value: Buffer = res.value;
-
-    return cbor.decode(value);
+    return cbor.decode(res.value);
   }
 
   async addItemToCache(

@@ -50,7 +50,7 @@ describe('WeatherService', () => {
       (axios.post as jest.Mock).mockRejectedValue(mockError);
 
       try {
-        const result = await WeatherService.fetchWeatherFromApi({
+        await WeatherService.fetchWeatherFromApi({
           city: mockCity,
           date: mockDate,
         });
@@ -68,7 +68,10 @@ describe('WeatherService', () => {
           city: mockCity,
           date: mockDate,
         });
-      } catch (e) {}
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (e) {
+        /* empty */
+      }
 
       expect(axios.post).toHaveBeenCalledTimes(3);
     }, 30_000);
